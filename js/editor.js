@@ -29,6 +29,13 @@
     '.footer-inner p'
   ].join(',');
 
+  /* ---------- 后台门禁：只有从 admin.html 登录过的浏览器才显示编辑按钮 ---------- */
+  var AUTH_KEY = 'eggAdmin';
+  function isAuthed() {
+    try { return localStorage.getItem(AUTH_KEY) === '1'; } catch (e) { return false; }
+  }
+  if (!isAuthed()) return; // 普通访客：什么都不渲染
+
   var editing = false;
 
   /* ---------- 工具条 & 提示条 ---------- */
@@ -37,7 +44,8 @@
   toolbar.setAttribute('data-egg-editor', '');
   toolbar.innerHTML =
     '<button type="button" class="egg-btn egg-btn-save" hidden>💾 保存并下载</button>' +
-    '<button type="button" class="egg-btn egg-btn-toggle">✏️ 编辑内容</button>';
+    '<button type="button" class="egg-btn egg-btn-toggle">✏️ 编辑内容</button>' +
+    '<button type="button" class="egg-btn egg-btn-logout" title="退出后台，在本浏览器隐藏编辑按钮">🚪 退出后台</button>';
 
   var banner = document.createElement('div');
   banner.className = 'egg-editor-banner';
@@ -76,6 +84,13 @@
     }
     editing = !editing;
     setEditable(editing);
+  });
+
+  var btnLogout = toolbar.querySelector('.egg-btn-logout');
+  btnLogout.addEventListener('click', function () {
+    if (editing && !window.confirm('当前还在编辑模式，退出后台会丢失未保存的修改。\n\n确定退出吗？')) return;
+    try { localStorage.removeItem(AUTH_KEY); } catch (e) {}
+    location.reload();
   });
 
   /* 编辑模式下拦截所有链接跳转，避免误触离开页面 */
